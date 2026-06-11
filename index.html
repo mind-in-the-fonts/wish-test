@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>WISH 멤버 매칭 테스트</title>
 <style>
   @font-face{
@@ -287,6 +287,12 @@
     position:relative;
     overflow:hidden;
   }
+  .polaroid .photo img{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    z-index:1;
+  }
   .polaroid .photo::after{
     content:"";position:absolute;inset:0;
     background:
@@ -386,7 +392,7 @@
       </div>
 
       <!-- RESULT -->
-      <div id="result" class="screen result">
+      <div id="result" class="screen result" aria-live="polite">
         <span class="badge">
           <span class="spark spark-peach"><svg width="14" height="14"><use href="#ico-spark"/></svg></span>
           너랑 어울리는 멤버는...
@@ -395,6 +401,7 @@
           <div class="photo">
             <span class="sp-tl spark spark-lav"><svg width="18" height="18"><use href="#ico-spark"/></svg></span>
             <span class="sp-br spark spark-pink"><svg width="14" height="14"><use href="#ico-spark"/></svg></span>
+            <img id="result-photo" alt="" hidden />
             <span id="result-emoji">💖</span>
           </div>
           <div class="caption" id="result-caption"></div>
@@ -413,22 +420,22 @@
 
 <script>
   const MEMBERS = {
-    yushi:  { name:"유우시", emoji:"⭐",     caption:"with YUSHI",
+    yushi:  { name:"유우시", emoji:"⭐",     caption:"with YUSHI", img:"images/yushi.jpg",
                tagline:"장난기 가득한 분위기 메이커",
                desc:"<strong>웃음이 끊이지 않는 연애</strong>를 꿈꾸는 너! 유우시는 어딜 가도 분위기를 띄우는 장난꾸러기. 맛집 탐방하고, 매운 거 같이 먹고, 가끔 시치미도 떼는 그런 사이. 심심할 틈이 없을걸." },
-    sakuya:  { name:"사쿠야", emoji:"🥐",    caption:"with SAKUYA",
+    sakuya:  { name:"사쿠야", emoji:"🥐",    caption:"with SAKUYA", img:"images/sakuya.jpg",
                tagline:"직진하는 테토남",
                desc:"<strong>당당하고 솔직한 연애</strong>가 어울리는 너! 사쿠야는 좋아하면 좋아한다고 말하는 직진형. 동대문 같이 가서 옷 고르고, 깔끔한 거 좋아하고, 화났냐고 먼저 물어보는 타입." },
-    sion:   { name:"시온", emoji:"🌷",      caption:"with SION",
+    sion:   { name:"시온", emoji:"🌷",      caption:"with SION", img:"images/sion.jpg",
                tagline:"차분하고 지적인 사람",
                desc:"<strong>고요하지만 깊이 있는 연애</strong>를 원하는 너! 시온은 미술관 데이트가 어울리고, 모든 걸 논리적으로 설명해줘. 청포도 그린티 당도0 알로에 추가 같은 디테일에 진심인 사람." },
-    riku:    { name:"리쿠", emoji:"🐈‍⬛",     caption:"with RIKU",
+    riku:    { name:"리쿠", emoji:"🐈‍⬛",     caption:"with RIKU", img:"images/riku.jpg",
                tagline:"애교 많은 사랑둥이",
                desc:"<strong>달콤하고 포근한 연애</strong>를 꿈꾸는 너! 리쿠는 집 데이트도 좋아하고, 애교로 분위기 풀고, 민초도 좋아하는 통통 튀는 매력. 두바이 여행 같이 가면 인생샷 찍어줄 거야." },
-    jaehee:  { name:"재희", emoji:"🌳",      caption:"with JAEHEE",
+    jaehee:  { name:"재희", emoji:"🌳",      caption:"with JAEHEE", img:"images/jaehee.jpg",
                tagline:"다정함의 끝판왕",
                desc:"<strong>따뜻하고 섬세한 연애</strong>가 어울리는 너! 재희는 성수 감성 카페 데이트, 잘못하면 47차 사과문 제출, 코트+맨투맨의 정석룩. 다정함이 본체인 사람." },
-    ryo:     { name:"료", emoji:"🦭",        caption:"with RYO",
+    ryo:     { name:"료", emoji:"🦭",        caption:"with RYO", img:"images/ryo.jpg",
                tagline:"챙겨주고 싶은 댕댕이",
                desc:"<strong>귀엽고 풋풋한 연애</strong>를 원하는 너! 료는 영화관 데이트, 들키면 심하게 당황, 망고 요구르트랑 망고 아이스바 좋아하는 망고러버. 옆에서 챙겨주고 싶은 매력." }
   };
@@ -531,12 +538,16 @@
   function renderQuestion(){
     const q = QUESTIONS[idx];
     $("step-label").textContent = `Q${idx+1} / ${QUESTIONS.length}`;
-    $("progress").style.width = `${((idx)/QUESTIONS.length)*100}%`;
+    $("progress").style.width = `${((idx+1)/QUESTIONS.length)*100}%`;
     $("question-text").textContent = q.q;
 
     const opts = $("options");
     opts.innerHTML = "";
-    const shuffled = [...q.options].sort(()=>Math.random()-0.5);
+    const shuffled = [...q.options];
+    for(let i=shuffled.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     shuffled.forEach((opt, i)=>{
       const btn = document.createElement("button");
       btn.className = "option";
@@ -563,6 +574,18 @@
     const winner = top[Math.floor(Math.random()*top.length)];
     const m = MEMBERS[winner];
     $("result-emoji").textContent = m.emoji;
+
+    const photo = $("result-photo");
+    const emoji = $("result-emoji");
+    if(m.img){
+      photo.onload = ()=>{ photo.hidden = false; emoji.hidden = true; };
+      photo.onerror = ()=>{ photo.hidden = true; emoji.hidden = false; };
+      photo.alt = m.name;
+      photo.src = m.img;
+    } else {
+      photo.hidden = true; emoji.hidden = false;
+    }
+
     $("result-caption").textContent = m.caption;
     $("result-name").textContent = m.name;
     $("result-tagline").textContent = m.tagline;
