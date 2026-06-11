@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>WISH 멤버 매칭 테스트</title>
 <style>
   @font-face{
@@ -386,7 +386,7 @@
       </div>
 
       <!-- RESULT -->
-      <div id="result" class="screen result">
+      <div id="result" class="screen result" aria-live="polite">
         <span class="badge">
           <span class="spark spark-peach"><svg width="14" height="14"><use href="#ico-spark"/></svg></span>
           너랑 어울리는 멤버는...
@@ -531,12 +531,16 @@
   function renderQuestion(){
     const q = QUESTIONS[idx];
     $("step-label").textContent = `Q${idx+1} / ${QUESTIONS.length}`;
-    $("progress").style.width = `${((idx)/QUESTIONS.length)*100}%`;
+    $("progress").style.width = `${((idx+1)/QUESTIONS.length)*100}%`;
     $("question-text").textContent = q.q;
 
     const opts = $("options");
     opts.innerHTML = "";
-    const shuffled = [...q.options].sort(()=>Math.random()-0.5);
+    const shuffled = [...q.options];
+    for(let i=shuffled.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     shuffled.forEach((opt, i)=>{
       const btn = document.createElement("button");
       btn.className = "option";
